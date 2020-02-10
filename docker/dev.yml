@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  application:
+    image: application
+    working_dir: /application
+    command: "npm start"
+    volumes:
+      - ../src:/application/src
+      - ../package.json:/application/package.json
+    depends_on:
+      - "dynamodb"
+
+  dynamodb:
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"

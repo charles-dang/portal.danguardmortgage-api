@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  build:
+    image: node:13.8.0
+    working_dir: /build
+    volumes:
+      - ..:/build
+
+
+  application:
+    image: application
+    working_dir: /application
+    command: "node ./src/index.js"
+    ports:
+      - 3000:3000
+    networks:
+      - overlay
+
+networks:
+  overlay:

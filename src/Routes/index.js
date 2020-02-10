@@ -4,10 +4,12 @@ const express = require("express");
 const router = express.Router();
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-const userRouter = require("./UsersRoutes");
+
+
+const applicationRouter = require("./applicationRoutes");
 
 //setting up application routes
-router.use('/users',userRouter);
+router.use('/', applicationRouter);
 
 
 
@@ -16,18 +18,18 @@ const options = {
   swaggerDefinition: {
     openapi: "3.0.0",
     info: {
-      title: "Time to document that Express API you built",
+      title: "Application API",
       version: "1.0.0",
       description:
-        "A test project to understand how easy it is to document and Express API",
+        "Application API to handle loan application",
       license: {
         name: "MIT",
         url: "https://choosealicense.com/licenses/mit/"
       },
       contact: {
-        name: "Swagger",
-        url: "https://swagger.io",
-        email: "Info@SmartBear.com"
+        name: "Charles Dang",
+        url: "https://www.linkedin.com/in/cdang/",
+        email: "charles.d.dang@gmail.com"
       }
     },
     servers: [
@@ -36,15 +38,14 @@ const options = {
       }
     ]
   },
-  apis: [ "./Models/User.js", "./Routes/UsersRoutes.js", 
-          "./Models/ApplicationModel.js",
-          "./Models/ApplicantModel.js",
-          "./Models/ValidationResultModel.js",
-          "./Routes/applicationRoutes.js"]
+  apis: [ "./src/Models/ApplicationModel.js",
+          "./src/Utilities/ValidatorUtility.js",
+          "./src/Routes/applicationRoutes.js"]
 };
 const specs = swaggerJsdoc(options); 
 router.use("/docs", swaggerUi.serve);
 router.get("/docs", swaggerUi.setup(specs, { explorer: true }));
+
 
 // catch 404 and forward to error handler
 router.use(function(req, res, next) {
