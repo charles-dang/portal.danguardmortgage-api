@@ -6,37 +6,48 @@ const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplica
 
 const CustomErrors = require('../Utilities/CustomErrors');
 
+const DynamoAdapter = require('./DynamoAdapter.js')
+
 class ApplicationService {
   constructor(input) {
     //check applicationId
+    this.applicationId = input;
+  } 
 
+
+  getApplicationInfo = () => {
+    return new Promise(async (resolve, reject) => {
+      if (typeof this.applicationId === 'undefined' || this.applicationId<1){
+        console.log(this.applicationId + " Not found")
+        reject('Not Found!');
+      }
+
+      let db = new DynamoAdapter;
+      try{
+        var response = await db.getApplication(this.applicationId);
+      }
+      catch (err){
+        console.log (err);
+      }
+      console.log("getApplication result:" + JSON.stringify(response));
+      resolve(response);
+    })
   }
 
-  static addApplication(input){
-    var newApplication = input;
-    newApplication.applicatinId='1';
-    newApplication.createdDate= new Date(Date.now());
+
+  static createApplication(input){
+    var newApplication = new NewApplicationtModel(input);;
+    newApplication.id='1';
+    newApplication.createdDate= (new Date(Date.now())).toISOString();
     newApplication.status='DRAFT'
-    return newApplication;
+
+    let db = new DynamoAdapter;
+    //DynamoAdapter.initializeTables();
+    db.putApplication(newApplication);
+    
+    return;// new ApplicationService(newApplication.applicationId);
   }
 
-  addApplicant(input){
-    //validate application exists
-
-    //validate applicant info
-    var newApplicant;
-    try{
-      newApplicantModel = new NewApplicantModel(input);
-    }
-
-    catch (error){
-      throw error;
-    }
-    return newApplication;
-  }
 }
-
-
-
 
 module.exports = ApplicationService;

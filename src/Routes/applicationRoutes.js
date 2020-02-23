@@ -14,6 +14,15 @@ const Validator = require('../Utilities/ValidatorUtility.js').Validator;
 var validator = new Validator();
 const ValidationResultItem = require('../Utilities/ValidatorUtility').ValidationResultItem;
 
+var awsConfig=require('../../config/AwsConfig.js');
+var AWS = require("aws-sdk");
+AWS.config.update({
+  region: awsConfig.aws_local_config.region,
+  endpoint: awsConfig.aws_local_config.endpoint,
+  accessKeyId: awsConfig.aws_local_config.secretAccessKey,
+  secretAccessKey: awsConfig.aws_local_config.secretAccessKey
+});
+var dynamodb = new AWS.DynamoDB();
 
 /**
  * @swagger
@@ -21,8 +30,6 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
  *   name: Application
  *   description: Application management
  */
-
-
 
 /**
  * @swagger
@@ -53,7 +60,7 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
  *                items:
  *                  $ref: '#/components/schemas/ValidationResultItem'
  */
-router.post("/application", (req, res, next) => {
+router.post("/application", async (req, res, next) => {
 	
 	//perform input validation
 	var newApplication;
@@ -65,11 +72,11 @@ router.post("/application", (req, res, next) => {
 		return;
 	}
 
-	console.log("adding application to DB");
+	console.log("create application to DB");
 	//write to DB
 	var application;
 	try{
-		application = ApplicationService.addApplication(newApplication);
+		application = await ApplicationService.createApplication(newApplication);
 	}
 	catch(error){  //unhandled exeption
 		CustomErrors.respondHttpErrors(res,error);
@@ -133,7 +140,7 @@ router.post("/application/:applicationId/applicant", (req, res, next) => {
 	}
   }
 
-  console.log("adding application to DB");
+  console.log("adding applicant to application");
   //write to DB
   var application;
   try{
@@ -147,8 +154,24 @@ router.post("/application/:applicationId/applicant", (req, res, next) => {
   res.json(application);
 });
 
-router.get("/application/hello", (req, res, next)=>{
-	res.send("hello Charles!!! refresh");
+router.get("/application/:id", async (req, res, next)=>{
+	console.log("retrieving applicationId: " + req.params.id);
+	let applicationService = new ApplicationService(req.params.id);
+	try{
+		var appModel = await applicationService.getApplicationInfo();
+	}
+	catch (err){
+		res.status(404);
+		res.send("unknown Id");
+	}
+	console.log(JSON.stringify(appModel, 0,2));
+	res.send(appModel);
 });
+
+router.post("/application/initializeDB", (req, res, next)=>{
+	ApplicationService.initializeTables();
+	res.send('Table initialized!');
+});
+
 
 module.exports = router;

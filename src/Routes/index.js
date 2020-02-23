@@ -39,6 +39,7 @@ const options = {
     ]
   },
   apis: [ "./src/Models/ApplicationModel.js",
+          "./src/Models/ApplicantModel.js",
           "./src/Utilities/ValidatorUtility.js",
           "./src/Routes/applicationRoutes.js"]
 };

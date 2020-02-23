@@ -13,8 +13,3 @@ services:
     command: "node ./src/index.js"
     ports:
       - 3000:3000
-    networks:
-      - overlay
-
-networks:
-  overlay:
