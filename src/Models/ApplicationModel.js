@@ -76,6 +76,7 @@ class NewApplicationtModel
 			this.loanType = input.loanType;
 			this.amortizationType = input.amortizationType;
 			this.loanTerms = input.loanTerms;
+			this.revision = 0;
 		}
 		else{
       		throw new CustomErrors.ValidationError(validationError);

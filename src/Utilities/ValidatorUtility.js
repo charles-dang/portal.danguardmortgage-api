@@ -31,6 +31,7 @@ class Validator{
 	constructor(){
 		this.IS_EMPTY = /.*\S.*/;
 		this.IS_EMAIL = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		this.IS_NOT_BOOLEAN = /^true|false$/
 	};
 
 	isNullUndefined(item){
@@ -50,6 +51,9 @@ class Validator{
 		return this.regexValidate(item,this.IS_EMAIL)
 	}
 
+	isNotBoolean(item){
+		return this.regexValidate(item, this.IS_NOT_BOOLEAN);
+	}
 	regexValidate(item, regex){
 		var patt = new RegExp(regex);
 	    if (patt.test(item)){

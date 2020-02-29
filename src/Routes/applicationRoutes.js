@@ -6,6 +6,7 @@ const router = express.Router();
 
 const NewApplicantModel = require('../Models/ApplicationModel.js').NewApplicantModel;
 const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplicationtModel;
+const ApplicationDeclarationsModel = require('../Models/ApplicationDeclarationsModel.js').ApplicationDeclarationsModel;
 const ApplicationService = require('../Services/ApplicationService.js');
 
 
@@ -13,16 +14,6 @@ const CustomErrors = require('../Utilities/CustomErrors');
 const Validator = require('../Utilities/ValidatorUtility.js').Validator;
 var validator = new Validator();
 const ValidationResultItem = require('../Utilities/ValidatorUtility').ValidationResultItem;
-
-var awsConfig=require('../../config/AwsConfig.js');
-var AWS = require("aws-sdk");
-AWS.config.update({
-  region: awsConfig.aws_local_config.region,
-  endpoint: awsConfig.aws_local_config.endpoint,
-  accessKeyId: awsConfig.aws_local_config.secretAccessKey,
-  secretAccessKey: awsConfig.aws_local_config.secretAccessKey
-});
-var dynamodb = new AWS.DynamoDB();
 
 /**
  * @swagger
@@ -122,7 +113,7 @@ router.post("/application", async (req, res, next) => {
  *                  $ref: '#/components/schemas/ValidationResultItem'
  *        		
  */
-router.post("/application/:applicationId/applicant", (req, res, next) => {
+router.post("/application/:id/applicant", (req, res, next) => {
 
   //perform input validation
   var newApplication;
@@ -161,8 +152,43 @@ router.get("/application/:id", async (req, res, next)=>{
 		var appModel = await applicationService.getApplicationInfo();
 	}
 	catch (err){
-		res.status(404);
-		res.send("unknown Id");
+		CustomErrors.respondHttpErrors(res,err);
+	}
+	console.log(JSON.stringify(appModel, 0,2));
+	res.send(appModel);
+});
+
+router.put("/application/:id/declarations", async (req, res, next)=>{
+	let declarations=null;
+	try{
+		declarations = new ApplicationDeclarationsModel(req.body);
+	} 
+	catch (error){
+		if (error instanceof CustomErrors.ValidationError) {
+			res.status(422).send(error.message);
+		return;
+	} 
+	else {
+		console.log('Unknown error', error);
+		throw error;
+	}
+	}
+
+	let applicationService;
+	try{
+		applicationService = new ApplicationService(req.params.id);
+	} 
+	catch(err){
+		if (error instanceof CustomErrors.ValidationError) {
+	  		res.status(422).send(error.message);
+	  		return;
+		} 
+	}
+	try{
+		var appModel = await applicationService.setDeclarations(declarations);
+	}
+	catch (err){
+		CustomErrors.respondHttpErrors(res,err);
 	}
 	console.log(JSON.stringify(appModel, 0,2));
 	res.send(appModel);
