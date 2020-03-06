@@ -4,9 +4,11 @@
 const express = require("express");
 const router = express.Router();
 
-const NewApplicantModel = require('../Models/ApplicationModel.js').NewApplicantModel;
+const NewApplicantModel = require('../Models/ApplicantModel.js').NewApplicantModel;
 const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplicationtModel;
 const ApplicationDeclarationsModel = require('../Models/ApplicationDeclarationsModel.js').ApplicationDeclarationsModel;
+const PropertyModel = require('../Models/PropertyModel.js').PropertyModel;
+const LoanModel = require('../Models/PropertyModel.js').LoanModel;
 const ApplicationService = require('../Services/ApplicationService.js');
 
 
@@ -63,7 +65,6 @@ router.post("/application", async (req, res, next) => {
 		return;
 	}
 
-	console.log("create application to DB");
 	//write to DB
 	var application;
 	try{
@@ -75,6 +76,27 @@ router.post("/application", async (req, res, next) => {
 	}
 
 	res.json(application);
+});
+
+
+/**
+ * [description]
+ * @param  {[type]} "/application/:id" [description]
+ * @param  {[type]} async              (req,         res, next [description]
+ * @return {[type]}                    [description]
+ */
+router.get("/application/:id", async (req, res, next)=>{
+	var appModel;
+	console.log("retrieving applicationId: " + req.params.id);
+	let applicationService = new ApplicationService(req.params.id);
+	try{
+		appModel = await applicationService.getApplicationInfo();
+	}
+	catch (err){
+		CustomErrors.respondHttpErrors(res,err);
+	}
+	console.log(JSON.stringify(appModel, 0,2));
+	res.send(appModel);
 });
 
 /**
@@ -113,43 +135,30 @@ router.post("/application", async (req, res, next) => {
  *                  $ref: '#/components/schemas/ValidationResultItem'
  *        		
  */
-router.post("/application/:id/applicant", (req, res, next) => {
 
-  //perform input validation
-  var newApplication;
-  try{
-  	newApplication = new NewApplicationtModel(req.body);
-  }
-  catch (error){
-  	if (error instanceof CustomErrors.ValidationError) {
-  		res.status(422).send(error.message);
-  		return;
-	} 
-	else {
-		console.log('Unknown error', error);
-		throw error;
+router.post("/application/:id/applicant", async (req, res, next) => {
+	console.log ("/application/:id/applicant");
+	let applicant = null;
+	try {
+		applicant = new NewApplicantModel(req.body);
 	}
-  }
-
-  console.log("adding applicant to application");
-  //write to DB
-  var application;
-  try{
-  	application = ApplicationService.addApplication(newApplication);
-  }
-  catch(error){  //unhandled exeption
-  	next(error);
-  	return;
-  }
-  
-  res.json(application);
-});
-
-router.get("/application/:id", async (req, res, next)=>{
-	console.log("retrieving applicationId: " + req.params.id);
-	let applicationService = new ApplicationService(req.params.id);
+	catch (error){
+		CustomErrors.respondHttpErrors(res,error);
+		return;
+	}
+	
+	let applicationService;
 	try{
-		var appModel = await applicationService.getApplicationInfo();
+		applicationService = new ApplicationService(req.params.id);
+	} 
+	catch(err){
+		if (error instanceof CustomErrors.ValidationError) {
+	  		res.status(422).send(error.message);
+	  		return;
+		} 
+	}
+	try{
+		var appModel = await applicationService.addApplicant(applicant);
 	}
 	catch (err){
 		CustomErrors.respondHttpErrors(res,err);
@@ -158,22 +167,72 @@ router.get("/application/:id", async (req, res, next)=>{
 	res.send(appModel);
 });
 
+router.put("/application/:id/property", async (req, res,next) =>{
+	let property = null;
+	try{
+		property = new PropertyModel(req.body);
+	}
+	catch(error){
+		CustomErrors.respondHttpErrors(res,error);
+		throw error;
+	}
+	console.log("==>"+JSON.stringify(property, 0,2));
+	let applicationService;
+	try{
+		applicationService = new ApplicationService(req.params.id);
+	} 
+	catch(err){
+		CustomErrors.respondHttpErrors(res,err);
+		return;
+	}
+	try{
+		var appModel = await applicationService.setProperty(property);
+	}
+	catch (err){
+		CustomErrors.respondHttpErrors(res,err);
+	}
+
+	res.send(property);
+});
+
+router.put("/application/:id/loan", async (req, res,next) =>{
+	let loan = null;
+	try{
+		loan = new LoanModel(req.body);
+	}
+	catch(error){
+		CustomErrors.respondHttpErrors(res,error);
+		throw error;
+	}
+	console.log("==>"+JSON.stringify(loan, 0,2));
+	let applicationService;
+	try{
+		applicationService = new ApplicationService(req.params.id);
+	} 
+	catch(err){
+		CustomErrors.respondHttpErrors(res,err);
+		return;
+	}
+	try{
+		var appModel = await applicationService.setLoan(property);
+	}
+	catch (err){
+		CustomErrors.respondHttpErrors(res,err);
+	}
+
+	res.send(property);
+});
+
 router.put("/application/:id/declarations", async (req, res, next)=>{
 	let declarations=null;
 	try{
 		declarations = new ApplicationDeclarationsModel(req.body);
 	} 
 	catch (error){
-		if (error instanceof CustomErrors.ValidationError) {
-			res.status(422).send(error.message);
-		return;
-	} 
-	else {
-		console.log('Unknown error', error);
+		CustomErrors.respondHttpErrors(res,error);
 		throw error;
 	}
-	}
-
+	
 	let applicationService;
 	try{
 		applicationService = new ApplicationService(req.params.id);

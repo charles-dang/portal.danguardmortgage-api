@@ -20,6 +20,29 @@ class BaseError extends Error {
     }
   }
 }
+
+class DataBaseReadError extends BaseError{
+  constructor(message, name = 'DatabaseRead Error') {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(message, name);
+  }
+
+  httpResponse = (res) => {
+    res.status(500).send(this.message);
+  }
+}
+
+class DataBaseWriteError extends BaseError{
+  constructor(message, name = 'DatabaseWrite Error') {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(message, name);
+  }
+
+  httpResponse = (res) => {
+    res.status(500).send(this.message);
+  }
+}
+
 class AccessPermissonError extends BaseError {
   constructor(message, name = 'AccessPermissonError') {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
@@ -63,8 +86,11 @@ function respondHttpErrors(res, error){
   }
 }
 
+
 module.exports = {
 	ValidationError:ValidationError,
 	NotFoundError: NotFoundError,
+  DataBaseReadError: DataBaseReadError,
+  DataBaseWriteError: DataBaseWriteError,
 	respondHttpErrors: respondHttpErrors
 }

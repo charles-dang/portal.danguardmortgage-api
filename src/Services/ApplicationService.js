@@ -12,6 +12,8 @@ class ApplicationService {
   constructor(input) {
     //check applicationId
     this.applicationId = input;
+    this.applicants=[];
+    this.declarations={};
   } 
 
 
@@ -24,16 +26,27 @@ class ApplicationService {
       }
 
       let db = new DynamoAdapter;
+      var response;
       try{
-        var response = await db.getApplication(this.applicationId);
+        response = await db.getApplication(this.applicationId);
+        this.revision=response.revision;
+        console.log("====> "+response.revision);
       }
       catch (err){
-        console.log (err);
+        console.log ("unable to load appliation from DB: "+err);
+        reject(err);
       }
-      console.log("getApplication result:" + JSON.stringify(response));
+      console.log("getApplication response:" + JSON.stringify(response));
 
-      //extract sub attributes
-      this.declarations=response.declarations;
+      if ((typeof response === 'undefined')){
+        resolve(response);
+      }
+      else{
+        //extract sub attributes
+        this.declarations=response.declarations;
+        this.applicants = response.applicants;
+
+      }
 
       if (basic){
         console.log("set basic to true");
@@ -44,22 +57,55 @@ class ApplicationService {
   }
 
   setDeclarations = (input) => {
-    this.setDeclarations = input;
-    console.log('setDeclarations:'+input)
+    this.declarations = input;
+
     let db = new DynamoAdapter;
-    db.putDeclarations(this.applicationId, input);
+    try{
+      db.putDeclarations(this.applicationId, input);
+    }
+    catch(error){
+      throw (error);
+    }    
   }
 
-  static createApplication(input){
+  setProperty = async (input) => {
+    this.property = input;
+    let db = new DynamoAdapter;
+    console.log(JSON.stringify(input));
+    try{
+      this.property = await db.putProperty(this.applicationId, input);
+    }
+    catch (error){
+      throw(error);
+    }
+  }
+
+  setLoan = (input) => {
+    this.loan = input;
+
+    let db = new DynamoAdapter;
+    console.log(JSON.stringify(input));
+    db.putLoan(this.applicationId, input);
+  }
+  
+  addApplicant = async (input) => {
+    this.applicants.push(input);
+    input.version=0;
+    input.id =     await DynamoAdapter.getNextPrimaryKey('applicantId')+"";
+    let db = new DynamoAdapter;
+    db.postApplicant(this.applicationId, input);
+  }
+
+  static async createApplication(input){
     var newApplication = new NewApplicationtModel(input);;
-    newApplication.id='3';
+    newApplication.id=await DynamoAdapter.getNextPrimaryKey('applicationId')+"";
     newApplication.createdDate= (new Date(Date.now())).toISOString();
     newApplication.status='DRAFT';
 
     let db = new DynamoAdapter;
     //DynamoAdapter.initializeTables();
     db.putApplication(newApplication);
-    
+    console.log("newApplication.id"+newApplication.id);
     return;// new ApplicationService(newApplication.applicationId);
   }
 

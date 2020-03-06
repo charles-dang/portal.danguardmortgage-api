@@ -54,6 +54,8 @@ class NewApplicationtModel
 	loanType = null;
 	amortizationType = null;
 	loanTerms = null;
+	applicants =[];
+	declarations = {};
 
 	constructor(input){
 		var validationError = [];

@@ -9,13 +9,15 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
 
 class ApplicationDeclarationsModel
 {
-	ownershipPropertyType = null;
-	ownershipPropertyInterest = null;
-	titleHoldingStatus = null;
-	isPrimaryResident = null;
-	ownershipPropertyTitle = null;
 
 	constructor(input){
+
+		this.ownershipPropertyType = null;
+		this.ownershipPropertyInterest = null;
+		this.titleHoldingStatus = null;
+		this.isPrimaryResident = null;
+		this.ownershipPropertyTitle = null;
+
 		var validationError = [];
 
 		let result = validator.isEmpty(input.ownershipPropertyType);
@@ -43,14 +45,14 @@ class ApplicationDeclarationsModel
 			validationError.push(new ValidationResultItem("ownershipPropertyTitle", input.ownershipPropertyTitle, result,"TBD"));
 		}
 
-		//status passed
+		//status passed, no error
 		if (validationError.length == 0 ){
 			this.ownershipPropertyType = input.ownershipPropertyType;
 			this.ownershipPropertyInterest = input.ownershipPropertyInterest;
 			this.titleHoldingStatus = input.titleHoldingStatus;
 			this.isPrimaryResident = input.isPrimaryResident;
 			this.ownershipPropertyTitle = input.ownershipPropertyTitle;
-			this.revision = 0;
+			this.revision = input.revision;
 		}
 		else{
       		throw new CustomErrors.ValidationError(validationError);
