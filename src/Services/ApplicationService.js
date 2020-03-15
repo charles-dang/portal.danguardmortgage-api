@@ -6,14 +6,20 @@ const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplica
 
 const CustomErrors = require('../Utilities/CustomErrors');
 
-const DynamoAdapter = require('./Database/DynamoAdapter.js')
+const DynamoAdapter = require('./Adapters/DynamoAdapter.js')
+const MongoAdapter = require('./Adapters/MongoAdapter.js')
+const UserAdapter = require('./Adapters/UserAdapter.js');
+const BorrowerAdapter = require('./Adapters/BorrowerAdapter.js');
+const NewUserModel = require('../Models/UserModel.js').NewUserModel;
 
 class ApplicationService {
   constructor(input) {
     //check applicationId
     this.applicationId = input;
-    this.applicants=[];
+    this.borrowers=[];
     this.declarations={};
+
+    this.db = new MongoAdapter();
   } 
 
 
@@ -21,16 +27,12 @@ class ApplicationService {
     this.input = input;
     return new Promise(async (resolve, reject) => {
       if (typeof this.applicationId === 'undefined' || this.applicationId<1){
-        console.log(this.applicationId + " Not found")
         reject(new CustomErrors.NotFoundError('Not Found'));
       }
 
-      let db = new DynamoAdapter;
-      var response;
       try{
-        response = await db.getApplication(this.applicationId);
+        var response = await this.db.getApplication(this.applicationId);
         this.revision=response.revision;
-        console.log("====> "+response.revision);
       }
       catch (err){
         console.log ("unable to load appliation from DB: "+err);
@@ -44,7 +46,7 @@ class ApplicationService {
       else{
         //extract sub attributes
         this.declarations=response.declarations;
-        this.applicants = response.applicants;
+        this.borrowers = response.borrowers;
 
       }
 
@@ -59,9 +61,8 @@ class ApplicationService {
   setDeclarations = (input) => {
     this.declarations = input;
 
-    let db = new DynamoAdapter;
     try{
-      db.putDeclarations(this.applicationId, input);
+      this.db.putDeclarations(this.applicationId, input);
     }
     catch(error){
       throw (error);
@@ -70,10 +71,9 @@ class ApplicationService {
 
   setProperty = async (input) => {
     this.property = input;
-    let db = new DynamoAdapter;
     console.log(JSON.stringify(input));
     try{
-      this.property = await db.putProperty(this.applicationId, input);
+      this.property = await this.db.putProperty(this.applicationId, input);
     }
     catch (error){
       throw(error);
@@ -83,38 +83,67 @@ class ApplicationService {
   setLoan = (input) => {
     this.loan = input;
 
-    let db = new DynamoAdapter;
-    console.log(JSON.stringify(input));
-    db.putLoan(this.applicationId, input);
+    this.db.putLoan(this.applicationId, input);
   }
   
-  addApplicant = async (input) => {
-    this.applicants.push(input);
+  addBorrower = async (applicationId,input) => {
+    console.log("ApplicationService::addBorrower "+ JSON.stringify(input, 0,2));
+    this.borrowers.push(input);
     input.version=0;
-    input.id =     await DynamoAdapter.getNextPrimaryKey('applicantId')+"";
-    let db = new DynamoAdapter;
-    db.postApplicant(this.applicationId, input);
+
+    //add entry to borrower table
+    try{
+      //console.log("Creating borrower record for: "+ JSON.stringify(input.email, 0,2));
+      var borrowerId = await BorrowerAdapter.addBorrower(input);
+    }
+    catch (error){
+      console.error(""+JSON.stringify(error,0,2))
+      throw error; 
+    }
+
+    //add borrower to application
+    input._id=borrowerId+"";
+    try{
+      var borrowerStatus = await this.db.putApplicationBorrower(this.applicationId, input);
+    }
+    catch( error){
+      throw error;
+    }
+    
+    //Add user
+    var userInfo = new NewUserModel(input);
+    userInfo.loan_applications=applicationId;
+    try{
+      var user = await UserAdapter.addUser(userInfo);
+    }
+    catch (error){
+      console.log("Downstream service User returns ERROR for addUser with applicationId" + applicationId +":" + JSON.stringify(error, 0,2))
+      throw error
+    }
+
+    return input;
   }
 
   static async createApplication(input){
     var newApplication = new NewApplicationtModel(input);;
-    newApplication.id=await DynamoAdapter.getNextPrimaryKey('applicationId')+"";
     newApplication.createdDate= (new Date(Date.now())).toISOString();
     newApplication.status='DRAFT';
 
-    let db = new DynamoAdapter;
-    //DynamoAdapter.initializeTables();
-    db.putApplication(newApplication);
-    console.log("newApplication.id"+newApplication.id);
-    return;// new ApplicationService(newApplication.applicationId);
+    let db = new MongoAdapter();
+    let application = await db.putApplication(newApplication);
+    return application;// new ApplicationService(newApplication.applicationId);
   }
 
-  static initializeTables(input){
-    DynamoAdapter.initializeTables();
-    
-    return;// new ApplicationService(newApplication.applicationId);
-  }
+  async getApplicationList(){
+    try{
+      var data = await this.db.getApplicationsList({});
+    }
+    catch(error){
+      throw(error);
+    }
+    return data;
 
+  }
 }
 
 module.exports = ApplicationService;

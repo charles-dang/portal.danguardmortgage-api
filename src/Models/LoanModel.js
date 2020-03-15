@@ -67,15 +67,10 @@ class LoanModel
 
 	    //status passed
 		if (validationError.length == 0 ){
-			this.address1 = input.address1;
-			this.address2 = input.address2;
-			this.city = input.city;
-			this.state = input.state;
-			this.zipcode = input.zipcode;
-			this.country = input.country;
-			this.occupancyType = input.occupancyType;
-			this.buildingType = input.buildingType;
-			this.estimatedValue = input.estimatedValue;
+			this.rate = input.rate;
+			this.lockedDate = input.lockedDate;
+			this.lockedExpirationDate = input.lockedExpirationDate;
+			this.processor = input.processor;
 		}
 		else{
       		throw new CustomErrors.ValidationError(validationError);

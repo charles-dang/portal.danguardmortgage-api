@@ -60,7 +60,6 @@ class ApplicationDeclarationsModel
 	}
 
 	stringify = function(){
-		console.log(JSON.stringify(this));
 		return JSON.stringify(this);
 	}
 }

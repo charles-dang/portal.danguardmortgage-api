@@ -5,7 +5,7 @@ const Validator = require('../Utilities/ValidatorUtility.js').Validator;
 var validator = new Validator();
 
 const ValidationResultItem = require('../Utilities/ValidatorUtility').ValidationResultItem;
-
+const ApplicationDeclarationsModel = require('./ApplicationDeclarationsModel').ApplicationDeclarationsModel;
 
 
 /**
@@ -54,24 +54,39 @@ class NewApplicationtModel
 	loanType = null;
 	amortizationType = null;
 	loanTerms = null;
-	applicants =[];
-	declarations = {};
-
+	borrowers =[];
 	constructor(input){
 		var validationError = [];
 
-		let referralCodeResult = validator.isEmpty(input.referralCode);
-		if (referralCodeResult){
-			validationError.push(new ValidationResultItem("referralCode", input.referralCode, referralCodeResult,"TBD"));
+		let result = validator.isEmpty(input.referralCode);
+		if (result){
+			validationError.push(new ValidationResultItem("referralCode", input.referralCode, result,"TBD"));
 		}
 
-		let identityIdResult = validator.isEmpty(input.identityId);
-		if (identityIdResult){
-			validationError.push(new ValidationResultItem("identityId", input.identityId, identityIdResult,"TBD"));
+		result = validator.isEmpty(input.identityId);
+		if (result){
+			validationError.push(new ValidationResultItem("identityId", input.identityId, result,"TBD"));
+		}
+
+		if (typeof input.declarations === 'undefined'){
+			input.declarations = {};
+		}
+		else{
+			try{
+				var declarations = new ApplicationDeclarationsModel(input.declarations);
+			}
+			catch(error){
+				error.message.forEach ( (item) => {
+					item.key = "declarations"+item.key;
+				});
+				validationError.push(error.message);
+			}
+
 		}
 
 		//status passed
 		if (validationError.length == 0 ){
+			this.declarations = declarations;
 			this.referralId = input.referralId;
 			this.referralCode = input.referralCode;
 			this.identityId = input.identityId;
@@ -92,11 +107,10 @@ class NewApplicationtModel
 }
 
 
-class ApplicationModel{
+class ApplicationModel extends NewApplicationtModel{
 	constructor(input){
 		//new application
 		if (typeof input.applicationId === 'undefined'){
-			let newApplicant = new NewApplicantModel(input);
 		}
 		else{
 

@@ -6,7 +6,7 @@ const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplica
 
 const CustomErrors = require('../Utilities/CustomErrors');
 
-const DynamoAdapter = require('./Database/DynamoAdapter.js')
+const DynamoAdapter = require('./Adapters/DynamoAdapter.js')
 
 class IdentityService {
   constructor(input) {

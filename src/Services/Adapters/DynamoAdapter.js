@@ -15,11 +15,11 @@ class DynamoAdapter{
 		this.db = new AWS.DynamoDB.DocumentClient();
 		this.applicationTable = 'tbl_loan_application';
 		this.primaryKeyTable = 'tbl_primary_key';
-		this.applicantTable = '';
+		this.userTable = 'tbl_User';
+		this.db = new AWS.DynamoDB.DocumentClient();
 	}
 	
 	putApplication = async function(info){
-		let db = new AWS.DynamoDB.DocumentClient();
 		console.log ('Revision='+info.revision);
 		var lastRevision = info.revision;
 		info.revision=lastRevision+1;
@@ -36,45 +36,16 @@ class DynamoAdapter{
 	
 	    let putResponse;
 	    try{
-	        putResponse = await db.put(params).promise();
+	        putResponse = await this.db.put(params).promise();
 	    }
-	    catch (err){
-	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
+	    catch (error){
+	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + error);
+	        throw (new CustomErrors.DataBaseWriteError("Fail to create new application"+error));
 	    }
 	}
 
-	/*
-	postApplicationSubItem = async function(applicationId, subItem, info){
-		console.log("putting SubItem:" + JSON.stringify(info));
-		let db = new AWS.DynamoDB.DocumentClient();
-		console.log ('Revision='+info.revision);
-		var params={
-	        TableName: this.applicationTable,
-	        Key: {
-	        	"id": applicationId
-	        },
-	        UpdateExpression: 'SET #subItem = list_append(#subItem, :value)',
-	        ExpressionAttributeNames:{
-	        	'#subItem': subItem
-	        },
-	        ExpressionAttributeValues: {
-	        	':value': info
-	        },
-	        ReturnValues: 'NONE'
-	    };
-		console.log(JSON.stringify(params,0,2));
-	    let putResponse;
-	    try{
-	        putResponse = await db.update(params).promise();
-	    }
-	    catch (err){
-	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
-	    }
-	}
-	 */
 	postApplicant = async function(applicationId,info){
 		console.log("putting SubItem:" + JSON.stringify(info));
-		let db = new AWS.DynamoDB.DocumentClient();
 		console.log ('Revision='+info.revision);
 		var params={
 	        TableName: this.applicationTable,
@@ -90,7 +61,7 @@ class DynamoAdapter{
 	
 	    let putResponse;
 	    try{
-	        putResponse = await db.update(params).promise();
+	        putResponse = await this.db.update(params).promise();
 	    }
 	    catch (err){
 	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
@@ -110,8 +81,6 @@ class DynamoAdapter{
 	}
 
 	putLoan = async function(applicationId, info){
-		console.log("putting loan:" + JSON.stringify(info,0,2));
-			
 	    let putResponse;
 	    try{
 	        putResponse = await this.putSingleAttribute(applicationId, 'loan', info);
@@ -136,7 +105,6 @@ class DynamoAdapter{
 	}
 
 	putSingleAttribute = async function(applicationId, attributeName, info){
-		let db = new AWS.DynamoDB.DocumentClient();
 		let lastRevision = 0;
 		if (typeof info.revision === 'undefined'){
 			info.revision = 1;
@@ -164,16 +132,14 @@ class DynamoAdapter{
 			params.ConditionExpression=null;
 		}
 
-		console.log("putSingleAttribute: "+JSON.stringify(params,0,2));
 	    let putResponse;
 	    try{
-	        putResponse = await db.update(params).promise();
+	        putResponse = await this.db.update(params).promise();
 	    }
 	    catch (err){
 	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
 	    	throw (err);
 	    }
-	    console.debug("putSingleAttribute response:"+ JSON.stringify(putResponse,0,2));
 	    return putResponse;
 	}
 
@@ -182,8 +148,6 @@ class DynamoAdapter{
 		this.applicationId=applicationId;
 		console.log("TableName: " + this.applicationTable);
 		return new Promise( async (resolve, reject) => {
-			console.log("applicationId:"+this.applicationId);
-			let db = new AWS.DynamoDB.DocumentClient();
 			var params={
 		        TableName: this.applicationTable,
 		        Key: {
@@ -191,9 +155,7 @@ class DynamoAdapter{
 		        }
 		    }
 		    try{
-		    	console.log("getting data from DB");
-		        var data = await db.get(params).promise();
-		    	console.log("data result from DB: "+ JSON.stringify(data,0,2));
+		        var data = await this.db.get(params).promise();
 		        resolve(data.Item);
 		    }
 		    catch (err){
@@ -203,8 +165,23 @@ class DynamoAdapter{
 
 	}
 
+	getApplicationsList = async function(options){
+		let params = {
+	        TableName: this.applicationTable,
+	        Key: {
+	            identityId: options.applicationId
+	        }			
+		}
+		try{
+			let data = this.db.get(params).promise();
+		}
+		catch(error){
+			console.log(error);
+		}
+		
+	}
+
 	static async getNextPrimaryKey(keyName){
-		let db = new AWS.DynamoDB.DocumentClient();
 		var params={
 	        TableName: 'tbl_primary_key',
 	        Key: {
@@ -219,8 +196,7 @@ class DynamoAdapter{
 	
 	    let putResponse;
 	    try{
-	        putResponse = await db.update(params).promise();
-	        console.log(putResponse.Attributes.id);
+	        putResponse = await this.db.update(params).promise();
 	        return putResponse.Attributes.id;
 	    }
 	    catch (err){
@@ -229,33 +205,10 @@ class DynamoAdapter{
 	}
 
 	static async initializeTables(){
-		console.log ("Initialize "+ await this.getNextPrimaryKey('applicantId'));
-		return;
-
-		//LOAN APPLICANT TABLE
-		var params = {
-		    TableName : "tbl_loan_applicant",
-		    KeySchema: [
-		        { AttributeName: "id", KeyType: "HASH"},  //Partition key
-			],
-		    AttributeDefinitions: [
-		        { AttributeName: "id", AttributeType: "S" },
-			],
-		    ProvisionedThroughput: {
-		        ReadCapacityUnits: 5,
-		        WriteCapacityUnits: 5
-		    }	
-		};
-
-		console.log("attemping to create table.\n");
+		//c
+		//return;
+		//
 		let dynamodb = new AWS.DynamoDB();
-		dynamodb.createTable(params, function(err, data) {
-		    if (err) {
-		        console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
-		    } else {
-		        console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
-		    }
-		});
 
 		//LOAN APPLICATION TABLE
 		var params = {
@@ -272,7 +225,7 @@ class DynamoAdapter{
 		    }	
 		};
 
-		console.log("attemping to create table.\n");
+		console.log("attemping to create table: "+params.TableName);
 		dynamodb.createTable(params, function(err, data) {
 		    if (err) {
 		        console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
@@ -295,8 +248,7 @@ class DynamoAdapter{
 		        WriteCapacityUnits: 5
 		    }	
 		};
-
-		console.log("attemping to create table.\n");
+		console.log("attemping to create table: "+params.TableName);
 		dynamodb.createTable(params, function(err, data) {
 		    if (err) {
 		        console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
@@ -305,6 +257,7 @@ class DynamoAdapter{
 		    }
 		});
 
+		//INITIALIZE PRIMARY KEY
 		params = {
 			TableName: "tbl_primary_key",
 			Item: {'key':'applicantId', 'id':0}
@@ -317,7 +270,21 @@ class DynamoAdapter{
 	    catch (err){
 	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
 	    }
-		
+
+
+		params = {
+			TableName: "tbl_primary_key",
+			Item: {'key':'applicationId', 'id':0}
+		}
+
+		try{
+	        let putResponse = await db.put(params).promise();
+	        console.log("set to 0")
+	    }
+	    catch (err){
+	        console.error(" dynamodb.put(" + JSON.stringify(params) +").promise() result in error " + err);
+	    }
+		console.log ("Initialize "+ await this.getNextPrimaryKey('applicationId'));
 
 	}
 

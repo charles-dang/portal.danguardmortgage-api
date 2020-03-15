@@ -1,5 +1,4 @@
 
-
 class BaseError extends Error {
   constructor(message, name = 'BaseError') {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
@@ -11,6 +10,7 @@ class BaseError extends Error {
     }
 	
     this.name = name;
+    this.code = name;
     this.message = message;
 
     // Custom debugging information
@@ -21,8 +21,18 @@ class BaseError extends Error {
   }
 }
 
+class HttpDownStreamError extends BaseError{
+  constructor(message, name = 'HttpDownStreamError') {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(message, name);
+  }
+
+  httpResponse = (res) => {
+    res.status(500).send(this.message);
+  }
+}
 class DataBaseReadError extends BaseError{
-  constructor(message, name = 'DatabaseRead Error') {
+  constructor(message, name = 'DatabaseReadError') {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
     super(message, name);
   }
@@ -33,9 +43,9 @@ class DataBaseReadError extends BaseError{
 }
 
 class DataBaseWriteError extends BaseError{
-  constructor(message, name = 'DatabaseWrite Error') {
+  constructor(message, name = 'DatabaseWriteError') {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
-    super(message, name);
+    super(message, name, 'DataBaseWriteError');
   }
 
   httpResponse = (res) => {
@@ -88,9 +98,11 @@ function respondHttpErrors(res, error){
 
 
 module.exports = {
+  BaseError:BaseError,
 	ValidationError:ValidationError,
 	NotFoundError: NotFoundError,
   DataBaseReadError: DataBaseReadError,
   DataBaseWriteError: DataBaseWriteError,
-	respondHttpErrors: respondHttpErrors
+	respondHttpErrors: respondHttpErrors,
+  HttpDownStreamError:HttpDownStreamError
 }

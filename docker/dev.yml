@@ -12,6 +12,11 @@ services:
       - "dynamodb"
     environment:
       - DYNAMODB_HOST=http://dynamodb:8000
+      - USER_SERVICE_HOST=http://localhost
+      - USER_SERVICE_PORT=3001
+      - BORROWER_SERVICE_HOST=http://localhost
+      - BORROWER_SERVICE_PORT=3002
+      - APPLICATIOON_SERVICE_HOST=http://localhost:3000
     links:
       - dynamodb:dynamodb
 

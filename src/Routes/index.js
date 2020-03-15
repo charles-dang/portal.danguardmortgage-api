@@ -7,10 +7,13 @@ const swaggerUi = require("swagger-ui-express");
 
 
 const applicationRouter = require("./applicationRoutes");
+const userRouter = require("./UserRoutes");
+const borrowerRouter = require("./borrowerRoutes");
 
 //setting up application routes
 router.use('/', applicationRouter);
-
+router.use('/', userRouter);
+router.use('/', borrowerRouter);
 
 
 // Swagger set up
@@ -39,7 +42,7 @@ const options = {
     ]
   },
   apis: [ "./src/Models/ApplicationModel.js",
-          "./src/Models/ApplicantModel.js",
+          "./src/Models/SubmissionModel.js",
           "./src/Utilities/ValidatorUtility.js",
           "./src/Routes/applicationRoutes.js"]
 };

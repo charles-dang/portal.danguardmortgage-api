@@ -2,10 +2,9 @@
   "name": "Swagger-Time-to-document-that-API-you-built-p2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./src/index.js"
+    "start": "nodemon ./src/index.js & nodemon ./src/index_user.js & nodemon ./src/index_borrower.js"
   },
   "author": "Alexander Karan",
   "license": "ISC",
@@ -16,6 +15,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "jwk-to-pem": "^2.0.3",
+    "mongodb": "^3.5.4",
     "node-fetch": "^2.6.0",
     "nodemon": "^2.0.2",
     "request": "^2.88.2",

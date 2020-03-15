@@ -4,7 +4,7 @@
 const express = require("express");
 const router = express.Router();
 
-const NewApplicantModel = require('../Models/ApplicantModel.js').NewApplicantModel;
+const NewBorrowerModel = require('../Models/BorrowerModel.js').NewBorrowerModel;
 const NewApplicationtModel = require('../Models/ApplicationModel.js').NewApplicationtModel;
 const ApplicationDeclarationsModel = require('../Models/ApplicationDeclarationsModel.js').ApplicationDeclarationsModel;
 const PropertyModel = require('../Models/PropertyModel.js').PropertyModel;
@@ -54,7 +54,7 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
  *                  $ref: '#/components/schemas/ValidationResultItem'
  */
 router.post("/application", async (req, res, next) => {
-	
+	console.log("ENTRY")
 	//perform input validation
 	var newApplication;
 	try{
@@ -78,6 +78,17 @@ router.post("/application", async (req, res, next) => {
 	res.json(application);
 });
 
+router.get("/applications", async (req, res, next) => {
+	console.log("Got application list", req.query);
+	try{
+		let newApplication = new ApplicationService(req.body);
+		var data = await newApplication.getApplicationList({});
+	}
+	catch(error){
+		CustomErrors.respondHttpErrors(res,error);
+	}
+	res.send(data)
+});
 
 /**
  * [description]
@@ -102,7 +113,7 @@ router.get("/application/:id", async (req, res, next)=>{
 /**
  * @swagger
  * path:
- *  /application/{applicationId}/applicant:
+ *  /application/{applicationId}/submission:
  *    post:
  *      summary: Add a new borrower to application
  *      tags: [Application]
@@ -136,34 +147,28 @@ router.get("/application/:id", async (req, res, next)=>{
  *        		
  */
 
-router.post("/application/:id/applicant", async (req, res, next) => {
-	console.log ("/application/:id/applicant");
-	let applicant = null;
+router.post("/application/:id/borrower", async (req, res, next) => {
+	console.log ("/application/:id/borrower");
 	try {
-		applicant = new NewApplicantModel(req.body);
+		var borrower = new NewBorrowerModel(req.body);
+		console.log ("/application/:id/borrower" + JSON.stringify(borrower, 0,2));
 	}
 	catch (error){
 		CustomErrors.respondHttpErrors(res,error);
 		return;
 	}
-	
-	let applicationService;
 	try{
-		applicationService = new ApplicationService(req.params.id);
+		var applicationService = new ApplicationService(req.params.id);
 	} 
 	catch(err){
-		if (error instanceof CustomErrors.ValidationError) {
-	  		res.status(422).send(error.message);
-	  		return;
-		} 
+		CustomErrors.respondHttpErrors(res,err);
 	}
 	try{
-		var appModel = await applicationService.addApplicant(applicant);
+		var appModel = await applicationService.addBorrower(req.params.id,borrower);
 	}
 	catch (err){
 		CustomErrors.respondHttpErrors(res,err);
 	}
-	console.log(JSON.stringify(appModel, 0,2));
 	res.send(appModel);
 });
 
@@ -174,9 +179,8 @@ router.put("/application/:id/property", async (req, res,next) =>{
 	}
 	catch(error){
 		CustomErrors.respondHttpErrors(res,error);
-		throw error;
+		return;
 	}
-	console.log("==>"+JSON.stringify(property, 0,2));
 	let applicationService;
 	try{
 		applicationService = new ApplicationService(req.params.id);
@@ -204,7 +208,7 @@ router.put("/application/:id/loan", async (req, res,next) =>{
 		CustomErrors.respondHttpErrors(res,error);
 		throw error;
 	}
-	console.log("==>"+JSON.stringify(loan, 0,2));
+
 	let applicationService;
 	try{
 		applicationService = new ApplicationService(req.params.id);
