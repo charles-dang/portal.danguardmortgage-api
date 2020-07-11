@@ -54,7 +54,7 @@ class NewBorrowerModel
     this.liabilities=[];
     this.assets=[];
 
-    console.log("constructor::"+JSON.stringify(input,0,2));
+    //console.log("constructor::"+JSON.stringify(input,0,2));
     var validationError = [];
 
     let result = this.validateBorrowerDetails(input);
@@ -115,7 +115,6 @@ class NewBorrowerModel
       validationError.push(new ValidationResultItem("email", details.email, result,"Email is invalid or missing"));
     }
 
-    console.log("===> validateBorrowerDetails"+JSON.stringify(validationError));
     return validationError;
   }
 }

@@ -87,8 +87,7 @@ class ApplicationService {
   }
   
   addBorrower = async (applicationId,input) => {
-    console.log("ApplicationService::addBorrower "+ JSON.stringify(input, 0,2));
-    this.borrowers.push(input);
+    //console.log("ApplicationService::addBorrower "+ JSON.stringify(input, 0,2));
     input.version=0;
 
     //add entry to borrower table
@@ -100,25 +99,24 @@ class ApplicationService {
       console.error(""+JSON.stringify(error,0,2))
       throw error; 
     }
+    
+    //Add user
+    try{
+      var user = await UserAdapter.addUser(input);
+    }
+    catch (error){
+      console.log("Downstream service User returns ERROR for addUser with applicationId" + applicationId +":" + JSON.stringify(error, 0,2))
+      throw error
+    }
 
     //add borrower to application
     input._id=borrowerId+"";
+    delete input.loan_applications;
     try{
       var borrowerStatus = await this.db.putApplicationBorrower(this.applicationId, input);
     }
     catch( error){
       throw error;
-    }
-    
-    //Add user
-    var userInfo = new NewUserModel(input);
-    userInfo.loan_applications=applicationId;
-    try{
-      var user = await UserAdapter.addUser(userInfo);
-    }
-    catch (error){
-      console.log("Downstream service User returns ERROR for addUser with applicationId" + applicationId +":" + JSON.stringify(error, 0,2))
-      throw error
     }
 
     return input;
@@ -134,9 +132,9 @@ class ApplicationService {
     return application;// new ApplicationService(newApplication.applicationId);
   }
 
-  async getApplicationList(){
+  async getApplicationList(filter){
     try{
-      var data = await this.db.getApplicationsList({});
+      var data = await this.db.getApplicationsList(filter);
     }
     catch(error){
       throw(error);

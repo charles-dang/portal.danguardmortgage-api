@@ -22,7 +22,7 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
 
 
 router.post("/user", async (req, res,next) =>{
-	console.log("receive user put"+JSON.stringify(req.body,0,2));
+	//console.log("Receive user put"+JSON.stringify(req.body,0,2));
 	//build and validate input
 	try{
 		var userInfo = new NewUserModel(req.body);

@@ -82,7 +82,7 @@ router.get("/applications", async (req, res, next) => {
 	console.log("Got application list", req.query);
 	try{
 		let newApplication = new ApplicationService(req.body);
-		var data = await newApplication.getApplicationList({});
+		var data = await newApplication.getApplicationList(req.query);
 	}
 	catch(error){
 		CustomErrors.respondHttpErrors(res,error);
@@ -148,10 +148,11 @@ router.get("/application/:id", async (req, res, next)=>{
  */
 
 router.post("/application/:id/borrower", async (req, res, next) => {
-	console.log ("/application/:id/borrower");
+	console.log ("RECEIVED POST http:// - /application/:id/borrower");
 	try {
-		var borrower = new NewBorrowerModel(req.body);
-		console.log ("/application/:id/borrower" + JSON.stringify(borrower, 0,2));
+		let request = req.body;
+		request.loan_applications=req.params.id;
+		var borrower = new NewBorrowerModel(request);
 	}
 	catch (error){
 		CustomErrors.respondHttpErrors(res,error);

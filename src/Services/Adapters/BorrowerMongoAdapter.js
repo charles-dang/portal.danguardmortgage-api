@@ -68,8 +68,8 @@ class MongoAdapter{
 
 
 	putBorrowerIncome = async function(borrowerId, info){
-		console.log("db:putBorrowerIncome:" + JSON.stringify(info));
-		console.log ('Revision='+info.revision);
+		//console.log("db:putBorrowerIncome:" + JSON.stringify(info));
+		//console.log ('Revision='+info.revision);
 
 		var update={}
 
@@ -81,18 +81,21 @@ class MongoAdapter{
 		try{
 			var data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId), 'incomes._id':info._id},{$set: update},{'returnOriginal':false});
 			if (data.result.n == 0){ 
-				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'incomes':info}},{'returnOriginal':false,upsert:true});
+				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'incomes':info}},{'returnOriginal':false,upsert:false});
 			}		
 		}
 		catch (error){
 			throw (new CustomErrors.DataBaseWriteError(error));
 		}
-
+		//console.log(JSON.stringify(data));
+		if (data.result.n == 0){
+			throw (new CustomErrors.NotFoundError('Record not found'));
+		}
 	};
 
 	putBorrowerLiability = async function(borrowerId, info){
-		console.log("db:putBorrowerIncome:" + JSON.stringify(info));
-		console.log ('Revision='+info.revision);
+		//console.log("db:putBorrowerIncome:" + JSON.stringify(info));
+		//console.log ('Revision='+info.revision);
 
 		var update={}
 
@@ -104,13 +107,16 @@ class MongoAdapter{
 		try{
 			var data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId), 'liabilities._id':info._id},{$set: update},{'returnOriginal':false});
 			if (data.result.n == 0){ 
-				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'liabilities':info}},{'returnOriginal':false,upsert:true});
+				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'liabilities':info}},{'returnOriginal':false,upsert:false});
 			}		
 		}
 		catch (error){
 			throw (new CustomErrors.DataBaseWriteError(error));
 		}
-
+		//console.log(JSON.stringify(data));
+		if (data.result.n == 0){
+			throw (new CustomErrors.NotFoundError('Record not found'));
+		}
 	};
 
 
@@ -124,11 +130,15 @@ class MongoAdapter{
 		try{
 			var data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId), 'assets._id':info._id},{$set: update},{'returnOriginal':false});
 			if (data.result.n == 0){ 
-				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'assets':info}},{'returnOriginal':false,upsert:true});
+				data = await db.collection(this.borrowerTable).updateOne({'_id':ObjectID(borrowerId)},{$addToSet: {'assets':info}},{'returnOriginal':false,upsert:false});
 			}		
 		}
 		catch (error){
 			throw (new CustomErrors.DataBaseWriteError(error));
+		}
+		//console.log(JSON.stringify(data));
+		if (data.result.n == 0){
+			throw (new CustomErrors.NotFoundError('Record not found'));
 		}
 	};
 }

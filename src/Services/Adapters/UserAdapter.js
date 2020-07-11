@@ -4,18 +4,18 @@ const CustomErrors = require('../../Utilities/CustomErrors');
 const request = require('request');
 
 var options = {
-	host: process.env["USER_SERVICE_HOST"],
-	port: process.env["USER_SERVICE_PORT"],
+	host: process.env["USER_SERVICE_HOST"] || 'http://localhost',
+	port: process.env["USER_SERVICE_PORT"] || 3000,
 	headers: {
 	'Content-Type': 'application/json'
 	}
 }
 
-var userServiceUrl = process.env["USER_SERVICE_HOST"]+":"+process.env["USER_SERVICE_PORT"]+"/api/v1"
+var userServiceUrl =  options.host +":"+options.port+"/api/v1"
 
 var UserAdapter = {
 	addUser : async function(info){
-		console.log("in addUser Adapter"+options.host)
+		//console.log("in addUser Adapter"+options.host)
 
 		var params = options;
 		params.method = 'POST';
@@ -31,7 +31,7 @@ var UserAdapter = {
 	},
 
 	httpRequest : async function (params, postData) {
-		console.log("in httpRequest:\n"+JSON.stringify(postData) );
+		//console.log("in httpRequest:\n"+JSON.stringify(postData) );
 		params.headers= {
 		'Content-Type': 'application/json'
 		}

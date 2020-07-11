@@ -31,7 +31,6 @@ class MongoAdapter{
 	}
 	
 	putApplication = async function(info){
-		console.log("putApplication>>>>")
 		try{
 			var data = await db.collection(this.applicationTable).insertOne(info);
 		}
@@ -39,12 +38,11 @@ class MongoAdapter{
 			console.log("putApplication ERR"+err);
 			return err;
 		}
-		console.log("..."+JSON.stringify(data.ops[0],0,2));
 		return data.ops[0];	}
 
 	putApplicationBorrower = async function(applicationId,info){
-		console.log("db:putApplicationBorrower:" + JSON.stringify(info));
-		console.log ('Revision='+info.revision);
+		//console.log("db:putApplicationBorrower:" + JSON.stringify(info));
+		//console.log ('Revision='+info.revision);
 
 		//building filter query
 		var queryAndConsitions = [];
@@ -59,11 +57,8 @@ class MongoAdapter{
 
 		//build array update object
 		Object.keys(info).forEach(function(key){
-			console.log("key:"+key+":"+info[key])
 			update["borrowers.$."+key]=info[key];
 		});
-
-		//console.log("db:putApplicationBorrower:====" + JSON.stringify(update,0,2));
 
 		try{
 			var data = await db.collection(this.applicationTable).updateOne({'_id':ObjectID(applicationId), 'borrowers.email':info.email},{$set: update},{'returnOriginal':false});
@@ -75,10 +70,10 @@ class MongoAdapter{
 			console.log("putUser ERROR:" + JSON.stringify(error,0,2));
 			throw (new CustomErrors.DataBaseWriteError(error));
 		}
-		console.log("db:putApplicationBorrower>>>:" + JSON.stringify(data,0,2));
+		//console.log("db:putApplicationBorrower>>>:" + JSON.stringify(data,0,2));
 	};
 	putProperty = async function(applicationId, info){
-		console.log("putting Property:" + JSON.stringify(info,0,2));
+		//console.log("putting Property:" + JSON.stringify(info,0,2));
 			
 	    try{
 	        var putResponse = await this.putSingleAttribute(applicationId, 'property', info);
@@ -101,7 +96,7 @@ class MongoAdapter{
 	}
 
 	putDeclarations = async function(applicationId,info){
-		console.log("putting mongodb declarations:" + JSON.stringify(info,0,2));
+		//console.log("putting mongodb declarations:" + JSON.stringify(info,0,2));
 			
 	    try{
 	        var data = await this.putSingleAttribute(applicationId, 'declarations', info);
@@ -121,7 +116,7 @@ class MongoAdapter{
 		lastRevision =info.revision-1;
 		var updateInfo={};
 		updateInfo[attributeName]=info
-		console.log("Update " + this.applicationTable +attributeName +" of application Id: "+ applicationId);
+		//console.log("Update " + this.applicationTable +attributeName +" of application Id: "+ applicationId);
 		try{
 			var data = await db.collection(this.applicationTable).updateOne({'_id':ObjectID(applicationId)}, {$set: updateInfo});	
 		}
@@ -129,7 +124,7 @@ class MongoAdapter{
 			console.log("putSingleAttribute ERROR: "+JSON.stringify(error));
 			throw (new DataBaseWriteError(error));
 		}
-		console.log("putSingleAttribute", JSON.stringify(data));
+		//console.log("putSingleAttribute", JSON.stringify(data));
 	    return data;
 	}
 
@@ -149,20 +144,46 @@ class MongoAdapter{
 
 	getApplicationsList = async function(options){
 		console.log("Finding Charles");
-		var queryOrConditions = [];
-		queryOrConditions.push({'borrower.firstName': 'Charles'});
-		queryOrConditions.push({'borrower.lastName': 'Charles'});
-		queryOrConditions.push({'coborrower.lastName': 'Charles'});
-		queryOrConditions.push({'coborrower.lastName': 'Charles'});
+
+		var queryNameConditions = [];
+
+	    if (options.identityId){
+	      console.log("query.identityId=" + options.identityId);
+	    }
+
+	    if (options.stage){
+	      console.log("query.identityId=" + options.stage);
+	    }
+	    if (options.name){
+	    	var arNames = options.name.split(' ');
+
+	    	if (arNames.length > 1){
+				queryNameConditions.push({'borrowers.firstName': arNames[0], 'borrowers.lastName': arNames[1]});
+				queryNameConditions.push({'borrowers.firstName': arNames[1], 'borrowers.lastName': arNames[0]});
+				queryNameConditions.push({'borrowers.coborrower.firstName': arNames[0], 'borrowers.coborrower.lastName': arNames[1]});
+				queryNameConditions.push({'borrowers.coborrower.firstName': arNames[1], 'borrowers.coborrower.lastName': arNames[0]});
+	    	}
+	    	else{
+				queryNameConditions.push({'borrowers.firstName': arNames[0]});
+				queryNameConditions.push({'borrowers.lastName': arNames[0]});
+				queryNameConditions.push({'borrowers.coborrower.firstName': arNames[0]});
+				queryNameConditions.push({'borrowers.coborrower.lastName': arNames[0]});
+	    	}    
+	    }
+	    
 
 		var queryAndConsitions=[];
-		queryAndConsitions.push({$or : queryOrConditions});
-		queryAndConsitions.push({status : 'DRAFT'});
+		if (queryNameConditions.length > 0){
+			queryAndConsitions.push({$or : queryNameConditions});
+		}
+		queryAndConsitions.push({status : {$in:['DRAFT']}});
 
 		var query = {$and : queryAndConsitions};
 		var limit = Math.min(2,2);
+		console.log("db:getApplicationsList query: "+JSON.stringify(query));
+
 		try{
-			var data = await db.collection(this.applicationTable).find(query).limit(limit).toArray();
+			var data = await db.collection(this.applicationTable).find(query).collation( {locale: 'en', strength: 2 } ).limit(limit).toArray();
 		}
 		catch(error){
 			console.log(error);

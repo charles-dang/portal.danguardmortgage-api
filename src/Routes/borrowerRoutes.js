@@ -24,7 +24,7 @@ const ValidationResultItem = require('../Utilities/ValidatorUtility').Validation
 
 router.put("/borrower", async (req, res,next) =>{
 	//build and validate input
-	console.log("Received HTTP PUT request: /borrower: " + JSON.stringify(req.body,0,2));
+	//console.log("Received HTTP PUT request: /borrower: " + JSON.stringify(req.body,0,2));
 	try{
 		var userInfo = new BorrowerModel(req.body);
 	}
@@ -45,7 +45,7 @@ router.put("/borrower", async (req, res,next) =>{
 
 router.put("/borrower/:id/income", async (req, res,next) =>{
 	//build and validate input         
-	console.log("Received HTTP PUT request: /borrower/income: " + JSON.stringify(req.body,0,2));
+	//console.log("Received HTTP PUT request: /borrower/income: " + JSON.stringify(req.body,0,2));
 	try{
 		var incomeInfo = new IncomeModel(req.body);
 	}
@@ -59,13 +59,14 @@ router.put("/borrower/:id/income", async (req, res,next) =>{
 	}
 	catch(error){
 		CustomErrors.respondHttpErrors(res,error);
+		return;
 	}
 	res.send(incomeInfo);
 });
 
 router.put("/borrower/:id/asset", async (req, res,next) =>{
 	//build and validate input         
-	console.log("Received HTTP PUT request: /borrower/income: " + JSON.stringify(req.body,0,2));
+	//console.log("Received HTTP PUT request: /borrower/income: " + JSON.stringify(req.body,0,2));
 	try{
 		var assetInfo = new AssetModel(req.body);
 	}
@@ -79,13 +80,14 @@ router.put("/borrower/:id/asset", async (req, res,next) =>{
 	}
 	catch(error){
 		CustomErrors.respondHttpErrors(res,error);
+		return;
 	}
 	res.send(assetInfo);
 });
 
 router.put("/borrower/:id/liability", async (req, res,next) =>{
 	//build and validate input         
-	console.log("Received HTTP PUT request: /borrower/liability: " + JSON.stringify(req.body,0,2));
+	//console.log("Received HTTP PUT request: /borrower/liability: " + JSON.stringify(req.body,0,2));
 	try{
 		var liabilityInfo = new LiabilityModel(req.body);
 	}
@@ -99,6 +101,7 @@ router.put("/borrower/:id/liability", async (req, res,next) =>{
 	}
 	catch(error){
 		CustomErrors.respondHttpErrors(res,error);
+		return;
 	}
 	res.send(liabilityInfo);
 });

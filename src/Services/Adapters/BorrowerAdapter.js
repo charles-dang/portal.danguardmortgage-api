@@ -4,14 +4,14 @@ const CustomErrors = require('../../Utilities/CustomErrors');
 const request = require('request');
 
 var options = {
-	host: process.env["BsORROWER_SERVICE_HOST"],
-	port: process.env["BORROWER_SERVICE_PORT"],
+	host: process.env["BsORROWER_SERVICE_HOST"] || 'http://localhost',
+	port: process.env["BORROWER_SERVICE_PORT"] || 3000,
 	headers: {
 	'Content-Type': 'application/json'
 	}
 }
 
-var borrowerServiceUrl = process.env["BORROWER_SERVICE_HOST"]+":"+process.env["BORROWER_SERVICE_PORT"]+"/api/v1"
+var borrowerServiceUrl = options.host +":"+options.port+"/api/v1"
 
 var BorrowerAdapter = {
 	addBorrower : async function(info){
@@ -30,7 +30,7 @@ var BorrowerAdapter = {
 	},
 
 	httpRequest : async function (params, postData) {
-		console.log("in httpRequest:\n"+JSON.stringify(postData) );
+		//console.log("in httpRequest:\n"+JSON.stringify(postData) );
 		params.headers= {
 		'Content-Type': 'application/json'
 		}
