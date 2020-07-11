@@ -6,7 +6,6 @@ var ObjectID = require('mongodb').ObjectID;
 
 var db;
 // Connection URL
-var url = 'mongodb+srv://portal-api:2x1OXzsTfRLg4znu@cluster0-k21aw.mongodb.net/test?retryWrites=true&w=majority';
 // Create the db connection
 MongoClient.connect(url, function(err, conn) {  
     //assert.equal(null, err);
