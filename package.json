@@ -16,7 +16,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwk-to-pem": "^2.0.3",
     "mongodb": "^3.5.4",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "nodemon": "^2.0.2",
     "request": "^2.88.2",
     "swagger-jsdoc": "^3.5.0",
