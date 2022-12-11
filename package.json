@@ -12,7 +12,7 @@
     "amazon-cognito-identity-js": "^3.2.5",
     "aws-sdk": "^2.634.0",
     "dynamodb": "^1.2.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "jsonwebtoken": "^8.5.1",
     "jwk-to-pem": "^2.0.3",
     "mongodb": "^3.5.4",
